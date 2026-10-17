@@ -1,0 +1,12 @@
+{
+  "name": "seoul-rent-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "2022~2026년 서울 전세 예산 구매력 변화 분석 앱",
+  "scripts": {
+    "preview": "node scripts/serve.mjs",
+    "test": "node --test"
+  }
+}
+

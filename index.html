@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="2022년부터 2026년까지 서울 법정동별 전세가와 예산 구매력 변화를 지도와 차트로 살펴보는 데이터 분석 앱"
+    />
+    <title>같은 예산, 달라진 동네</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">본문 바로가기</a>
+
+    <header class="hero">
+      <div class="page-shell hero__content">
+        <p class="eyebrow">SEOUL JEONSE BUDGET EXPLORER</p>
+        <h1>같은 예산,<br /><span>달라진 동네</span></h1>
+        <p class="hero__description">
+          내가 가진 전세 예산으로 얻을 수 있는 공간은 지난 5년 동안 얼마나
+          달라졌을까요? 서울 법정동 지도와 실제 전세 거래를 함께
+          확인해 보세요.
+        </p>
+        <div class="hero__meta" aria-label="분석 정보">
+          <span>2022—2026</span>
+          <span>서울 25개 자치구</span>
+          <span>법정동 지도</span>
+          <span>실거래 기반</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" class="page-shell main-content">
+      <section
+        id="file-protocol-warning"
+        class="file-protocol-warning"
+        role="alert"
+        aria-labelledby="file-protocol-warning-title"
+        hidden
+      >
+        <div>
+          <strong id="file-protocol-warning-title">HTML 파일을 직접 열면 데이터 조회가 작동하지 않습니다.</strong>
+          <p>
+            주소가 <code>file:///</code>로 시작하면 API 서버에 연결할 수 없어요.
+            아래 버튼으로 로컬 실행 화면을 열어 주세요.
+          </p>
+        </div>
+        <a href="http://127.0.0.1:4173/">정상 실행 화면 열기 <span aria-hidden="true">→</span></a>
+      </section>
+
+      <section class="search-card" aria-labelledby="search-heading">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">01 · 조건 선택</p>
+            <h2 id="search-heading">분석할 동네와 예산을 알려주세요</h2>
+          </div>
+          <p>금액 단위는 만 원입니다.</p>
+        </div>
+
+        <form id="search-form" class="search-form">
+          <div class="field">
+            <label for="district">자치구</label>
+            <select id="district" name="district" required>
+              <option value="">불러오는 중…</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="neighborhood">동(법정동)</label>
+            <select id="neighborhood" name="neighborhood" required disabled>
+              <option value="">자치구를 먼저 선택하세요</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="building-type">주택유형</label>
+            <select id="building-type" name="buildingType" required>
+              <option value="아파트">아파트</option>
+              <option value="오피스텔">오피스텔</option>
+              <option value="연립다세대">연립·다세대</option>
+              <option value="단독다가구">단독·다가구</option>
+              <option value="전체">전체</option>
+            </select>
+          </div>
+
+          <div class="field field--budget">
+            <label for="budget">나의 전세 예산</label>
+            <div class="input-with-unit">
+              <input
+                id="budget"
+                name="budget"
+                type="number"
+                min="1000"
+                max="300000"
+                step="1000"
+                value="30000"
+                inputmode="numeric"
+                required
+              />
+              <span>만 원</span>
+            </div>
+            <p id="budget-readable" class="field-hint">3억 원</p>
+          </div>
+
+          <button id="analyze-button" class="primary-button" type="submit">
+            5년 변화 분석하기
+            <span aria-hidden="true">→</span>
+          </button>
+        </form>
+
+        <p class="form-note">
+          서울 열린데이터광장의 공식 연도별 파일(2022~2023)과 OpenAPI(2024~2026)에서
+          전세 거래만 분석합니다.
+        </p>
+      </section>
+
+      <div id="status-message" class="status-message" role="status" aria-live="polite"></div>
+
+      <section id="loading-panel" class="loading-panel" hidden aria-label="데이터 분석 중">
+        <div class="spinner" aria-hidden="true"></div>
+        <div>
+          <strong>5년치 거래를 분석하고 있어요</strong>
+          <p>거래량에 따라 잠시 시간이 걸릴 수 있습니다.</p>
+        </div>
+      </section>
+
+      <section class="map-card" aria-labelledby="map-heading">
+        <div class="section-heading map-card__heading">
+          <div>
+            <p class="section-kicker">02 · 법정동 지도</p>
+            <h2 id="map-heading">서울을 지도에서 선택하세요</h2>
+          </div>
+          <div class="map-toolbar">
+            <label for="map-year">지도 표시 연도</label>
+            <select id="map-year" aria-describedby="map-year-help">
+              <option value="2022">2022년</option>
+              <option value="2023">2023년</option>
+              <option value="2024">2024년</option>
+              <option value="2025">2025년</option>
+              <option value="2026" selected>2026년</option>
+            </select>
+          </div>
+        </div>
+
+        <p id="map-year-help" class="map-intro">
+          지도에서 법정동을 클릭하면 위 선택창과 연결됩니다. 분석 후에는
+          선택한 연도의 평균 전세가와 예상 가능 면적을 확인할 수 있어요.
+        </p>
+
+        <div class="map-layout">
+          <div class="map-visual">
+            <div
+              id="seoul-map"
+              class="seoul-map"
+              role="img"
+              aria-label="서울 법정동 선택 지도"
+            ></div>
+            <div class="map-legend" aria-label="지도 범례">
+              <span><i class="legend-swatch legend-swatch--seoul"></i>서울 법정동</span>
+              <span><i class="legend-swatch legend-swatch--district"></i>선택 자치구</span>
+              <span><i class="legend-swatch legend-swatch--comparison"></i>비교함</span>
+              <span><i class="legend-swatch legend-swatch--selected"></i>선택 법정동</span>
+            </div>
+          </div>
+
+          <aside class="map-summary" aria-labelledby="map-selection-title">
+            <p class="map-summary__eyebrow">현재 선택</p>
+            <h3 id="map-selection-title">법정동을 불러오는 중입니다</h3>
+            <p id="map-selection-guide" class="map-summary__guide">
+              지도 경계를 준비하고 있어요.
+            </p>
+
+            <dl class="map-metrics">
+              <div>
+                <dt id="map-deposit-label">2026년 평균 전세가</dt>
+                <dd id="map-deposit">분석 전</dd>
+              </div>
+              <div>
+                <dt id="map-area-label">2026년 예상 가능 면적</dt>
+                <dd id="map-area">분석 전</dd>
+              </div>
+              <div>
+                <dt id="map-count-label">2026년 누적 분석 거래</dt>
+                <dd id="map-count">분석 전</dd>
+              </div>
+            </dl>
+
+            <button id="map-analyze-button" class="map-analyze-button" type="button">
+              이 동네 5년 분석하기
+              <span aria-hidden="true">→</span>
+            </button>
+          </aside>
+        </div>
+
+        <p id="map-status" class="map-status" role="status" aria-live="polite">
+          법정동 경계 데이터를 불러오고 있어요.
+        </p>
+      </section>
+
+      <section id="empty-state" class="empty-state">
+        <div class="empty-state__number">05</div>
+        <div>
+          <p class="section-kicker">2022—2026</p>
+          <h2>한 번의 조회로 5년의 변화를 확인하세요</h2>
+          <p>
+            평균 전세가, ㎡당 전세가, 같은 예산으로 예상되는 면적을 연도별로
+            비교합니다.
+          </p>
+        </div>
+      </section>
+
+      <section id="results" class="results" hidden aria-labelledby="result-heading">
+        <div class="section-heading section-heading--results">
+          <div>
+            <p class="section-kicker">03 · 분석 결과</p>
+            <h2 id="result-heading">분석 결과</h2>
+            <p id="result-subtitle" class="result-subtitle"></p>
+          </div>
+          <button id="add-comparison" class="secondary-button" type="button">
+            비교함에 추가
+          </button>
+        </div>
+
+        <div class="metric-grid">
+          <article class="metric-card metric-card--accent">
+            <p>2026년 누적 평균 전세가</p>
+            <strong id="metric-deposit">—</strong>
+            <span id="metric-deposit-note">거래 자료 기준</span>
+          </article>
+          <article class="metric-card">
+            <p>2026년 누적 예상 가능 면적</p>
+            <strong id="metric-area">—</strong>
+            <span id="metric-area-pyeong">—</span>
+          </article>
+          <article class="metric-card">
+            <p>5년간 예산 구매력</p>
+            <strong id="metric-change">—</strong>
+            <span>2022년 대비 2026년</span>
+          </article>
+          <article class="metric-card">
+            <p>2026년 누적 분석 거래</p>
+            <strong id="metric-count">—</strong>
+            <span>유효한 전세 거래</span>
+          </article>
+        </div>
+
+        <article class="insight-card">
+          <div class="insight-card__label">핵심 해석</div>
+          <p id="insight-text"></p>
+        </article>
+
+        <div class="chart-grid">
+          <article class="chart-card">
+            <div class="chart-card__heading">
+              <div>
+                <p class="section-kicker">BUDGET POWER</p>
+                <h3>예산으로 얻을 수 있는 예상 면적</h3>
+              </div>
+              <span>㎡</span>
+            </div>
+            <div id="power-chart" class="chart" role="img" aria-label="연도별 예상 가능 면적 그래프"></div>
+          </article>
+
+          <article class="chart-card">
+            <div class="chart-card__heading">
+              <div>
+                <p class="section-kicker">AVERAGE DEPOSIT</p>
+                <h3>연도별 평균 전세가</h3>
+              </div>
+              <span>만원</span>
+            </div>
+            <div id="price-chart" class="chart" role="img" aria-label="연도별 평균 전세가 그래프"></div>
+          </article>
+        </div>
+
+        <article class="table-card">
+          <div class="chart-card__heading">
+            <div>
+              <p class="section-kicker">YEARLY DATA</p>
+              <h3>연도별 상세 결과</h3>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">연도</th>
+                  <th scope="col">평균 전세가</th>
+                  <th scope="col">평균 ㎡당 전세가</th>
+                  <th scope="col">예상 가능 면적</th>
+                  <th scope="col">거래 건수</th>
+                </tr>
+              </thead>
+              <tbody id="yearly-table-body"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section id="comparison-section" class="comparison-section" hidden aria-labelledby="comparison-heading">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">04 · 동네 비교</p>
+            <h2 id="comparison-heading">같은 예산, 다른 동네</h2>
+          </div>
+          <p>최대 3곳까지 비교할 수 있습니다.</p>
+        </div>
+        <div id="comparison-list" class="comparison-list"></div>
+        <div id="comparison-chart" class="comparison-chart" role="img" aria-label="동네별 예상 가능 면적 비교 그래프"></div>
+      </section>
+
+      <section class="method-card" aria-labelledby="method-heading">
+        <p class="section-kicker">분석 방법</p>
+        <h2 id="method-heading">결과는 이렇게 계산했어요</h2>
+        <ol>
+          <li>2022~2023년 공식 파일과 2024~2026년 API 자료를 불러옵니다.</li>
+          <li>주택유형이 일치하고 보증금·면적이 유효한 거래만 남깁니다.</li>
+          <li>각 거래의 보증금을 임대면적으로 나누어 ㎡당 전세가를 구합니다.</li>
+          <li>입력 예산을 평균 ㎡당 전세가로 나누어 예상 면적을 계산합니다.</li>
+        </ol>
+        <p class="method-card__notice">
+          예상 면적은 실거래 평균을 이용한 참고값이며 현재 매물의 가격이나 계약
+          가능 여부를 보장하지 않습니다. 2026년 자료는 연중 누적 자료입니다.
+          지도는 현행 법정동 경계를 기준으로 표시합니다.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="page-shell footer-content">
+        <p>데이터 출처 · 서울 열린데이터광장 「서울시 부동산 전월세가 정보」</p>
+        <p>경계 출처 · 국토교통부 국가공간정보센터 법정구역정보</p>
+        <p>스마트도시데이터분석 · 과제 2</p>
+      </div>
+    </footer>
+  </body>
+</html>
+
