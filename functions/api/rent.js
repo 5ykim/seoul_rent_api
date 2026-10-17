@@ -157,7 +157,21 @@ async function fetchPage(apiKey, params, start, end) {
     throw new RequestError("서울 열린데이터 서버 응답이 원활하지 않습니다.", 502);
   }
 
-  const payload = await response.json();
+  const responseText = await response.text();
+  let payload;
+
+  try {
+    payload = JSON.parse(responseText);
+  } catch {
+    if (/<CODE>INFO-200<\/CODE>/i.test(responseText)) {
+      return { totalCount: 0, rows: [] };
+    }
+
+    throw new RequestError(
+      "서울 열린데이터 API 연결이 일시적으로 원활하지 않습니다. 잠시 후 다시 시도해 주세요.",
+      502,
+    );
+  }
   const service = payload[SERVICE_NAME];
 
   if (!service) {

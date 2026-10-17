@@ -104,6 +104,35 @@ test("Pages Function이 API 응답을 집계하여 JSON으로 반환한다", asy
   assert.match(requestedUrl, /tbLnOpendataRentV\/1\/1000\/2026\/11680/);
 });
 
+test("서울 API가 XML 오류를 반환하면 사용자용 안내를 보여준다", async (context) => {
+  const originalFetch = globalThis.fetch;
+
+  context.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async () =>
+    new Response("<RESULT><CODE>ERROR-301</CODE><MESSAGE>인증 오류</MESSAGE></RESULT>", {
+      status: 200,
+      headers: { "Content-Type": "application/xml" },
+    });
+
+  const request = new Request(
+    "https://example.com/api/rent?year=2026&cggCode=11680&cggName=%EA%B0%95%EB%82%A8%EA%B5%AC&stdgCode=10300&buildingType=%EC%98%A4%ED%94%BC%EC%8A%A4%ED%85%94",
+  );
+  const response = await onRequestGet({
+    request,
+    env: { SEOUL_API_KEY: "test-key" },
+  });
+  const payload = await response.json();
+
+  assert.equal(response.status, 502);
+  assert.equal(
+    payload.error,
+    "서울 열린데이터 API 연결이 일시적으로 원활하지 않습니다. 잠시 후 다시 시도해 주세요.",
+  );
+});
+
 test("2022년은 API 키 없이 공식 연도별 파일 집계값을 반환한다", async () => {
   const request = new Request(
     "https://example.com/api/rent?year=2022&cggCode=11440&cggName=%EB%A7%88%ED%8F%AC%EA%B5%AC&stdgCode=10200&buildingType=%EC%95%84%ED%8C%8C%ED%8A%B8",

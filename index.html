@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="2022년부터 2026년까지 서울 법정동별 전세가와 예산 구매력 변화를 지도와 차트로 살펴보는 데이터 분석 앱"
+      content="2022년부터 2026년까지 같은 전세 예산으로 얻을 수 있는 서울 법정동별 예상 주거 면적 변화를 지도와 차트로 살펴보는 데이터 분석 앱"
     />
-    <title>같은 예산, 달라진 동네</title>
+    <title>같은 예산, 달라진 면적</title>
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
     <script src="app.js" defer></script>
@@ -18,9 +18,9 @@
     <header class="hero">
       <div class="page-shell hero__content">
         <p class="eyebrow">SEOUL JEONSE BUDGET EXPLORER</p>
-        <h1>같은 예산,<br /><span>달라진 동네</span></h1>
+        <h1>같은 예산,<br /><span>달라진 면적</span></h1>
         <p class="hero__description">
-          내가 가진 전세 예산으로 얻을 수 있는 공간은 지난 5년 동안 얼마나
+          내가 가진 전세 예산으로 얻을 수 있는 주거 면적은 지난 5년 동안 얼마나
           달라졌을까요? 서울 법정동 지도와 실제 전세 거래를 함께
           확인해 보세요.
         </p>
@@ -112,8 +112,9 @@
         </form>
 
         <p class="form-note">
-          서울 열린데이터광장의 공식 연도별 파일(2022~2023)과 OpenAPI(2024~2026)에서
-          전세 거래만 분석합니다.
+          서울 OpenAPI에서 조회할 수 있는 기간은 최근 3년(2024~2026)이므로,
+          5개년 분석을 위해 서울 열린데이터광장의 공식 연도별 파일(2022~2023)을
+          함께 사용했습니다. 모든 연도에서 전세 거래만 분석합니다.
         </p>
       </section>
 
