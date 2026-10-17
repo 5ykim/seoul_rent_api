@@ -4,6 +4,11 @@
 
 ![웹앱 미리보기](seoul-rent-preview.png)
 
+## 실행 링크
+
+- Cloudflare 앱: <https://seoul-rent-api-dp5.pages.dev/>
+- GitHub 저장소: <https://github.com/5ykim/seoul_rent_api>
+
 ## 주요 기능
 
 - 자치구, 동(법정동), 주택유형 선택
